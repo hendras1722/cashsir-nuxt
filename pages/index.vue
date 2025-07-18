@@ -45,9 +45,13 @@
 
     <u-table :data="data" :columns="columns">
       <template #quantity-cell="{ row }">
-        <UButton @click="handleCount('plus', row.original.id)">+</UButton>
+        <UButton @click="handleCount('plus', row.original.id)"
+          :disabled="row.original.quantity >= (product.length > 0 && product.find((item) => item.id === row.original.id)?.stock || 0)">
+          +
+        </UButton>
         <span class="mx-2">{{ row.original.quantity }}</span>
-        <UButton @click="handleCount('min', row.original.id)">-</UButton>
+        <UButton @click="handleCount('min', row.original.id)" :variant="'solid'" :disabled="row.original.quantity <= 1">
+          -</UButton>
       </template>
       <template #price-cell="{ row }">
         <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
@@ -228,7 +232,7 @@ const getProduct = computed(() => product.value.map((item: Product) => {
     value: item.id,
     ...item
   }
-}).filter((item: Product) => item.stock > 0) as Product[])
+}).filter((item: Product) => item.stock > 0 && data.value.filter(product => product.id === item.id).length === 0) as Product[])
 
 function handleCount(type: 'min' | 'plus', id: string) {
   if (type === 'plus') {
@@ -289,7 +293,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 const getTotal = computed(() => {
-  const getPrice = product.value.find(item => item.id === state.product_name) as TableList
+  const getPrice = getProduct.value.find(item => item.id === state.product_name) as Product
   return {
     price: getPrice?.price,
     subtotal: getPrice && Number(getPrice?.price || 0) * (state.quantity || 0)
@@ -367,7 +371,6 @@ function downloadReceipt() {
   }
 }
 
-// Function untuk print receipt
 function printReceipt() {
   try {
     const currentDate = new Date().toLocaleString('id-ID', {
