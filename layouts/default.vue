@@ -67,7 +67,7 @@
         </div>
 
         <div class="flex items-center space-x-4">
-
+          <UButton label="View Page" color="success" variant="outline" @click="$router.push('/')"></UButton>
         </div>
       </header>
 

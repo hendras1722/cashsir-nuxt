@@ -13,6 +13,8 @@
 
               <UFormField label="Quantity" name="quantity">
                 <UInput v-model="state.quantity" type="number" class="w-fit" />
+                <span v-if="getProduct.length" class="ml-1">/ {{getProduct.find((item) => item.id ===
+                  state.product_name)?.stock}}x</span>
               </UFormField>
 
               <div>
@@ -49,7 +51,7 @@
         <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
       </template>
       <template #subtotal-cell="{ row }">
-        <span>Rp.{{ Number(row.original.price * row.original.quantity).toLocaleString('id-ID') }}</span>
+        <span>Rp.{{ Number(Number(row.original.price) * row.original.quantity).toLocaleString('id-ID') }}</span>
       </template>
       <template #action-cell="{ row }">
         <UButton icon="i-lucide-trash" color="error" variant="ghost" aria-label="Delete"
@@ -141,8 +143,14 @@ import { UButton, UModal, USelect } from '#components'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
 import * as z from 'zod'
 
+useHead({
+  title: 'Cashsir App',
+})
+
 definePageMeta({
   layout: false,
+  name: 'CashsirApp',
+
 })
 
 const schema = z.object({
@@ -165,7 +173,7 @@ interface TableList {
   price: string
   subtotal: string
 }
-export interface Product {
+interface Product {
   id: string;
   product_name: string;
   stock: number;

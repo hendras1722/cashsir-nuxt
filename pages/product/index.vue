@@ -4,6 +4,10 @@ import type { TableColumn, FormSubmitEvent } from '@nuxt/ui';
 import * as z from 'zod'
 import InputCurrency from '~/components/InputCurrency.vue';
 
+useHead({
+  title: 'Dashboard | Cashsir App',
+})
+
 interface TableList {
   id: string
   product_name: string
@@ -23,6 +27,8 @@ const schema = z.object({
   }),
   price: z.string().min(1),
 })
+
+const id = ref('')
 
 const state = reactive<Partial<z.infer<typeof schema>>>({
   price: '',
@@ -65,6 +71,23 @@ const columns: TableColumn<TableList>[] = [
 
 const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
   open.value = false
+  if (id.value) {
+    data.value = data.value.map(item => {
+      if (item.id === id.value) {
+        return {
+          ...item,
+          product_name: event.data.product_name,
+          stock: event.data.stock,
+          price: event.data.price
+        }
+      }
+      return item
+    })
+    id.value = ''
+    localStorage.setItem('data', JSON.stringify(data.value))
+
+    return
+  }
   data.value = [
     ...data.value,
     {
@@ -85,6 +108,14 @@ function removeItem(id: string) {
     description: 'Item berhasil dihapus',
     color: 'success'
   })
+}
+
+function editItem(item: TableList) {
+  open.value = true
+  state.product_name = item.product_name
+  state.price = item.price
+  state.stock = item.stock
+  id.value = item.id
 }
 </script>
 
@@ -126,8 +157,16 @@ function removeItem(id: string) {
   <div>
     <UTable :columns="columns" :data="getData">
       <template #action-cell="{ row }">
-        <UButton icon="i-lucide-trash" color="error" variant="ghost" aria-label="Delete"
-          @click="removeItem(row.original.id)" />
+        <div class="flex gap-3">
+          <UButton icon="i-lucide-pencil" color="success" variant="ghost" aria-label="Delete"
+            @click="editItem(row.original)" />
+          <UButton icon="i-lucide-trash" color="error" variant="ghost" aria-label="Delete"
+            @click="removeItem(row.original.id)" />
+
+        </div>
+      </template>
+      <template #price-cell="{ row }">
+        <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
       </template>
     </UTable>
   </div>
