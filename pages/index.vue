@@ -65,7 +65,7 @@
       Total: Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}
     </div>
 
-    <UModal v-model:open="checkoutOpen" title="Checkout - Receipt">
+    <UModal v-model:open="checkoutOpen" title="Checkout - Receipt" :dismissible="false" :close="false">
       <UButton label="Checkout" color="success" variant="solid" class="w-full flex justify-center mt-4"
         :disabled="data.length === 0" @click="handleCheckout" />
       <template #body>
@@ -108,7 +108,6 @@
             </div>
           </div>
 
-          <!-- Action Buttons -->
           <div class="flex justify-around gap-3 mt-6">
             <UButton color="success" variant="solid" class="flex-1 justify-center" @click="printReceipt">
               <template #leading>
@@ -127,7 +126,7 @@
 
           <!-- Clear Cart Button -->
           <div class="mt-4">
-            <UButton color="orange" variant="outline" class="w-full justify-center" @click="clearCartAndClose">
+            <UButton color="neutral" variant="outline" class="w-full justify-center" @click="clearCartAndClose">
               <template #leading>
                 <i class="i-lucide-trash-2"></i>
               </template>
@@ -318,7 +317,6 @@ Tanggal: ${currentDate}
 
 `
 
-  // Add items
   data.value.forEach(item => {
     const itemName = item.product_name.padEnd(15)
     const qty = `${item.quantity}x`.padStart(5)
@@ -534,6 +532,7 @@ function handleCheckout() {
     }
     return item
   })
+  product.value = getProduct
   localStorage.setItem('data', JSON.stringify(getProduct))
 }
 
