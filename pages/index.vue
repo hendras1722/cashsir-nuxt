@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-screen p-5">
     <div class="flex justify-end mb-5 gap-3">
-      <UButton label="Manage Produk" color="success" variant="solid" @click="$router.push('/product')" />
+      <UButton label="Manage Product" color="success" variant="solid" @click="$router.push('/product')" />
       <UModal v-model:open="open" title="Tambah Order">
         <UButton label="Tambah Order" color="primary" variant="solid" />
         <template #body>
           <div class="w-full">
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-              <UFormField label="Produk Name" name="product_name">
+              <UFormField label="Product Name" name="product_name">
                 <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" value-key="id"
                   label-key="product_name" />
               </UFormField>
@@ -85,7 +85,7 @@
           <!-- Items List -->
           <div class="space-y-2 text-sm">
             <div class="grid grid-cols-4 gap-2 font-bold text-xs">
-              <div>Produk</div>
+              <div>Product Name</div>
               <div class="text-center">Qty</div>
               <div class="text-right">Harga</div>
               <div class="text-right">Subtotal</div>

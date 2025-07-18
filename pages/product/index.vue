@@ -121,12 +121,12 @@ function editItem(item: TableList) {
 
 <template>
   <div class="flex justify-end mb-5">
-    <UModal v-model:open="open" title="Add Produk">
-      <UButton label="Add Produk" color="primary" variant="solid" />
+    <UModal v-model:open="open" title="Add Product">
+      <UButton label="Add Product" color="primary" variant="solid" />
 
       <template #body>
         <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-          <UFormField label="Produk Name" name="product_name">
+          <UFormField label="Product Name" name="product_name">
             <UInput v-model="state.product_name" class="w-full" />
           </UFormField>
 
