@@ -78,7 +78,7 @@ const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
           ...item,
           product_name: event.data.product_name,
           stock: event.data.stock,
-          price: event.data.price
+          price: event.data.price.replace(/[.]/g, '')
         }
       }
       return item
@@ -113,7 +113,7 @@ function removeItem(id: string) {
 function editItem(item: TableList) {
   open.value = true
   state.product_name = item.product_name
-  state.price = item.price
+  state.price = Number(item.price).toLocaleString('id-ID')
   state.stock = item.stock
   id.value = item.id
 }
