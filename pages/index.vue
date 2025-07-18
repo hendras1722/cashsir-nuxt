@@ -18,14 +18,18 @@
                     if (!state.quantity) return
                     state.quantity += 1
                   }">+</UButton>
-                  <UInput v-model="state.quantity" type="number" class="!w-[60px]" />
+                  <UInput v-model="state.quantity" type="number" class="!w-[80px]">
+                    <template #trailing>
+                      <span v-if="state.product_name">/ {{getProduct.find((item) => item.id ===
+                        state.product_name)?.stock}}x</span>
+                    </template>
+                  </UInput>
                   <UButton @click="() => {
                     if (!state.quantity) return
                     state.quantity -= 1
                   }" :disabled="!!(state.quantity && state.quantity <= 1)">-</UButton>
 
-                  <span v-if="state.product_name" class="ml-1 text-lg">/ {{getProduct.find((item) => item.id ===
-                    state.product_name)?.stock}}x</span>
+
                 </div>
 
 
@@ -158,6 +162,7 @@
 <script setup lang="ts">
 import { UButton, UModal, USelectMenu } from '#components'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
+import { addDays, startOfDay } from 'date-fns'
 import * as z from 'zod'
 
 useHead({
@@ -301,7 +306,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   data.value = [...data.value, items]
   open.value = false
   state.product_name = ''
-  state.quantity = 0
+  state.quantity = 1
 }
 
 const getTotal = computed(() => {
@@ -525,12 +530,7 @@ function printReceipt() {
 }
 
 function clearCartAndClose() {
-  const report = data.value.map(item => ({
-    ...item,
-    created_at: new Date().toISOString()
-  }))
-  const resultReport = [...report, ...JSON.parse(localStorage.getItem('report') || '[]')]
-  localStorage.setItem('report', JSON.stringify(resultReport))
+
   checkoutOpen.value = false
   toast.add({
     title: 'Success',
@@ -543,6 +543,14 @@ function clearCartAndClose() {
 function handleCheckout() {
   checkoutOpen.value = true
   const getItemsLocalStorage = localStorage.getItem('data')
+
+  const report = data.value.map((item: TableList) => ({
+    ...item,
+    created_at: startOfDay(new Date(addDays(new Date(), 1).toISOString()))
+  }))
+  const resultReport = [...report, ...JSON.parse(localStorage.getItem('report') || '[]')]
+  localStorage.setItem('report', JSON.stringify(resultReport))
+
   const getProduct = getItemsLocalStorage && JSON.parse(getItemsLocalStorage).map((item: Product) => {
     const findProduct = data.value.find(product => product.id === item.id)
     if (findProduct) {
@@ -555,6 +563,8 @@ function handleCheckout() {
   })
   product.value = getProduct
   localStorage.setItem('data', JSON.stringify(getProduct))
+
+
 }
 
 

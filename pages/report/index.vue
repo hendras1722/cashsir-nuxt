@@ -12,10 +12,19 @@
     </UPopover>
   </div>
   <u-table :data="getData" :columns="columns">
+    <template #quantity-cell="{ row }">
+      <span>{{ row.original.quantity }}x</span>
+    </template>
     <template #created_at-cell="{ row }">
-      <span>{{ row.original?.created_at && format(new Date(row.original.created_at),
+      <span>{{ row.original?.created_at && format(subDays(new Date(row.original.created_at), 1),
         'dd-MM-yyyy') || '-'
       }}</span>
+    </template>
+    <template #price-cell="{ row }">
+      <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
+    </template>
+    <template #subtotal-cell="{ row }">
+      <span>Rp.{{ Number(row.original.subtotal).toLocaleString('id-ID') }}</span>
     </template>
   </u-table>
   <div class="text-lg font-bold flex justify-end">
@@ -25,14 +34,14 @@
 
 <script lang="tsx" setup>
 import type { TableColumn } from '@nuxt/ui';
-import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
-import { format } from 'date-fns';
+import { CalendarDate } from '@internationalized/date'
+import { format, subDays } from 'date-fns';
 
 
 interface Product {
   id: string;
   product_name: string;
-  stock: number;
+  quantity: number;
   price: string;
   subtotal: string;
 }
@@ -40,11 +49,6 @@ interface Product {
 interface Report extends Product {
   created_at: Date;
 }
-
-
-const df = new DateFormatter('en-US', {
-  dateStyle: 'medium'
-})
 
 const modelValue = shallowRef(new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()))
 
@@ -63,7 +67,10 @@ const columns: TableColumn<Report>[] = [{
 }, {
   accessorKey: 'created_at',
   header: 'Created At'
-}]
+}, {
+  accessorKey: 'subtotal',
+  header: 'Sub Total',
+},]
 
 const data = ref<Report[]>([])
 
