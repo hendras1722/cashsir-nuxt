@@ -13,6 +13,7 @@ interface TableList {
 
 const open = ref(false)
 const data = ref<TableList[]>([])
+const toast = useToast()
 
 const schema = z.object({
   product_name: z.string().min(1),
@@ -75,6 +76,16 @@ const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
   ]
   localStorage.setItem('data', JSON.stringify(data.value))
 }
+
+function removeItem(id: string) {
+  data.value = data.value.filter(item => item.id !== id)
+  localStorage.setItem('data', JSON.stringify(data.value))
+  toast.add({
+    title: 'Success',
+    description: 'Item berhasil dihapus',
+    color: 'success'
+  })
+}
 </script>
 
 <template>
@@ -113,6 +124,11 @@ const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
     </UModal>
   </div>
   <div>
-    <UTable :columns="columns" :data="getData" />
+    <UTable :columns="columns" :data="getData">
+      <template #action-cell="{ row }">
+        <UButton icon="i-lucide-trash" color="error" variant="ghost" aria-label="Delete"
+          @click="removeItem(row.original.id)" />
+      </template>
+    </UTable>
   </div>
 </template>
