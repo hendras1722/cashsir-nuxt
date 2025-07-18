@@ -13,7 +13,8 @@
 
               <UFormField label="Quantity" name="quantity">
                 <UInput v-model="state.quantity" type="number" class="w-fit" />
-                <span v-if="getProduct.length" class="ml-1">/ {{getProduct.find((item) => item.id ===
+
+                <span v-if="state.product_name" class="ml-1">/ {{getProduct.find((item) => item.id ===
                   state.product_name)?.stock}}x</span>
               </UFormField>
 
