@@ -8,7 +8,8 @@
           <div class="w-full">
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
               <UFormField label="Produk Name" name="product_name">
-                <USelect v-model="state.product_name" class="w-full" :items="getProduct" />
+                <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" value-key="id"
+                  label-key="product_name" />
               </UFormField>
 
               <UFormField label="Quantity" name="quantity">
@@ -140,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { UButton, UModal, USelect } from '#components'
+import { UButton, UModal, USelectMenu } from '#components'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
 import * as z from 'zod'
 
