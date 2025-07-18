@@ -33,7 +33,7 @@ const id = ref('')
 const state = reactive<Partial<z.infer<typeof schema>>>({
   price: '',
   product_name: '',
-  stock: 0
+  stock: 1
 })
 
 const getData = computed(() => {
@@ -85,6 +85,9 @@ const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
     })
     id.value = ''
     localStorage.setItem('data', JSON.stringify(data.value))
+    state.product_name = ''
+    state.stock = 0
+    state.price = ''
 
     return
   }
@@ -98,6 +101,9 @@ const onSubmit = (event: FormSubmitEvent<z.infer<typeof schema>>) => {
     }
   ]
   localStorage.setItem('data', JSON.stringify(data.value))
+  state.product_name = ''
+  state.stock = 0
+  state.price = ''
 }
 
 function removeItem(id: string) {
@@ -131,7 +137,18 @@ function editItem(item: TableList) {
           </UFormField>
 
           <UFormField label="Stock" name="stock">
-            <UInput v-model="state.stock" type="number" class="w-fit" />
+            <div class="flex gap-3">
+              <UButton @click="() => {
+                if (!state.stock) return
+                state.stock += 1
+              }">+</UButton>
+              <UInput v-model="state.stock" type="number" class="!w-[60px]" />
+              <UButton @click="() => {
+                if (!state.stock) return
+                state.stock -= 1
+              }" :disabled="!!(state.stock && state.stock <= 1)">-</UButton>
+
+            </div>
           </UFormField>
 
           <UFormField label="Harga" name="price">

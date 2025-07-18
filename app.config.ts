@@ -137,6 +137,20 @@ export default defineAppConfig({
       info: '#3B82F6',
       neutral: 'zinc',
     },
+    navigationMenu: {
+      variants: {
+        active: {
+          true: {
+            childLink: 'before:bg-blue-500 text-highlighted',
+            childLinkIcon: 'text-default',
+          },
+          false: {
+            childLink: 'before:bg-transparent text-muted',
+            childLinkIcon: 'text-muted',
+          },
+        },
+      },
+    },
   },
   size: 'md',
   avatar: {

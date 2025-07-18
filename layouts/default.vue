@@ -18,26 +18,7 @@
 
       <!-- Navigation Menu -->
       <nav class="flex-1 px-2 py-4 space-y-1">
-        <div class="space-y-1">
-          <h3 :class="[
-            'px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider transition-opacity duration-200',
-            sidebarCollapsed ? 'lg:opacity-0' : 'opacity-100'
-          ]">
-            Data Product
-          </h3>
-
-          <NuxtLink to="/product"
-            class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 text-white bg-blue-600">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z">
-              </path>
-            </svg>
-            <span :class="sidebarCollapsed ? 'lg:opacity-0 lg:w-0' : 'opacity-100'">Product</span>
-          </NuxtLink>
-
-        </div>
-
+        <UNavigationMenu :collapsed="sidebarCollapsed" :items="items" color="primary" orientation="vertical" />
       </nav>
 
       <!-- Resize Handle -->
@@ -85,6 +66,7 @@
 </template>
 
 <script setup>
+
 const sidebarCollapsed = ref(false)
 const sidebarWidth = ref(256)
 const isResizing = ref(false)
@@ -133,4 +115,25 @@ onMounted(() => {
     window.removeEventListener('resize', handleResize)
   })
 })
+
+const route = useRoute()
+
+
+const items = computed(() => [
+  {
+    label: 'Product',
+    to: '/product',
+    icon: 'i-lucide-package-search',
+    active: route.path === '/product',
+    class: 'h-[50px]',
+    activeClass: '!text-blue-200 before:!bg-blue-500 rounded-lg'
+  }, {
+    label: 'report',
+    to: '/report',
+    icon: 'i-lucide-clipboard-plus',
+    active: route.path === '/report',
+    class: 'h-[50px]',
+    activeClass: '!text-blue-200 before:!bg-blue-500 rounded-lg'
+  }
+])
 </script>

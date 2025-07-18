@@ -13,10 +13,22 @@
               </UFormField>
 
               <UFormField label="Quantity" name="quantity">
-                <UInput v-model="state.quantity" type="number" class="w-fit" />
+                <div class="flex gap-3">
+                  <UButton @click="() => {
+                    if (!state.quantity) return
+                    state.quantity += 1
+                  }">+</UButton>
+                  <UInput v-model="state.quantity" type="number" class="!w-[60px]" />
+                  <UButton @click="() => {
+                    if (!state.quantity) return
+                    state.quantity -= 1
+                  }" :disabled="!!(state.quantity && state.quantity <= 1)">-</UButton>
 
-                <span v-if="state.product_name" class="ml-1">/ {{getProduct.find((item) => item.id ===
-                  state.product_name)?.stock}}x</span>
+                  <span v-if="state.product_name" class="ml-1 text-lg">/ {{getProduct.find((item) => item.id ===
+                    state.product_name)?.stock}}x</span>
+                </div>
+
+
               </UFormField>
 
               <div>
@@ -191,7 +203,7 @@ const checkoutOpen = ref<boolean>(false)
 
 const state = reactive<Partial<Schema>>({
   product_name: '',
-  quantity: 0
+  quantity: 1
 })
 
 const data = ref<TableList[]>([])
@@ -513,13 +525,19 @@ function printReceipt() {
 }
 
 function clearCartAndClose() {
-  data.value = []
+  const report = data.value.map(item => ({
+    ...item,
+    created_at: new Date().toISOString()
+  }))
+  const resultReport = [...report, ...JSON.parse(localStorage.getItem('report') || '[]')]
+  localStorage.setItem('report', JSON.stringify(resultReport))
   checkoutOpen.value = false
   toast.add({
     title: 'Success',
     description: 'Cart berhasil dikosongkan!',
     color: 'success'
   })
+  data.value = []
 }
 
 function handleCheckout() {
@@ -538,6 +556,7 @@ function handleCheckout() {
   product.value = getProduct
   localStorage.setItem('data', JSON.stringify(getProduct))
 }
+
 
 onMounted(() => {
   product.value = JSON.parse(localStorage.getItem('data') || '[]')
