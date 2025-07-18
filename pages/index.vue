@@ -2,7 +2,7 @@
   <div class="min-h-screen p-5">
     <div class="flex justify-end mb-5 gap-3">
       <UButton label="Manage Produk" color="success" variant="solid" @click="$router.push('/product')" />
-      <UModal v-model:open="open" title="Add Produk">
+      <UModal v-model:open="open" title="Tambah Order">
         <UButton label="Tambah Order" color="primary" variant="solid" />
         <template #body>
           <div class="w-full">
