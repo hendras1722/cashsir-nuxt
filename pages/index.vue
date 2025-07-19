@@ -144,7 +144,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-              }}</span>
+                }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -198,6 +198,8 @@ import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
 import { addDays, startOfDay } from 'date-fns'
 import * as z from 'zod'
 import InputCurrency from '~/components/InputCurrency.vue'
+import { useWindowSize } from '@vueuse/core'
+
 
 useHead({
   title: 'Cashsir App',
@@ -208,6 +210,7 @@ definePageMeta({
   name: 'CashsirApp',
 
 })
+const { width } = useWindowSize()
 
 const schema = z.object({
   product_name: z.string().min(1),
@@ -549,16 +552,15 @@ function printReceipt() {
     const printWindow = window.open('', '_blank', 'width=400,height=600')
     if (printWindow) {
       printWindow.document.write(printContent)
-      setTimeout(() => {
+      if (width.value > 768) {
         printWindow.document.close()
-      }, 500)
-
+      }
       // Wait for content to load then print
       printWindow.onload = () => {
         printWindow.print()
-        setTimeout(() => {
+        if (width.value > 768) {
           printWindow.close()
-        }, 500) // Close after printing
+        }
       }
 
       toast.add({
