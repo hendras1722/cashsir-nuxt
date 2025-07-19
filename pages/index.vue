@@ -144,7 +144,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-                }}</span>
+              }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -557,7 +557,10 @@ function printReceipt() {
       // Wait for content to load then print
       printWindow.onload = () => {
         printWindow.print()
-        printWindow.close()
+        if (width.value > 768) {
+          printWindow.close()
+        }
+        // printWindow.close()
       }
 
       toast.add({

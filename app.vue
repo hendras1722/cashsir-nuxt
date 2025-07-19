@@ -14,7 +14,7 @@ nuxtApp.hook('page:finish', () => {
 
 <template>
   <UApp>
-    <Loading />
+    <!-- <Loading v-show="loadingPages" /> -->
     <NuxtLayout>
       <div>
         <NuxtPage />
