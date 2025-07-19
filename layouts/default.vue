@@ -128,7 +128,7 @@ const items = computed(() => [
     class: 'h-[50px]',
     activeClass: '!text-blue-200 before:!bg-blue-500 rounded-lg'
   }, {
-    label: 'report',
+    label: 'Report',
     to: '/report',
     icon: 'i-lucide-clipboard-plus',
     active: route.path === '/report',

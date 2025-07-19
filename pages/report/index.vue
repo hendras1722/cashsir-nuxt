@@ -18,7 +18,7 @@
     <template #created_at-cell="{ row }">
       <span>{{ row.original?.created_at && format(subDays(new Date(row.original.created_at), 1),
         'dd-MM-yyyy') || '-'
-      }}</span>
+        }}</span>
     </template>
     <template #price-cell="{ row }">
       <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
@@ -57,7 +57,7 @@ const columns: TableColumn<Report>[] = [{
   header: 'ID',
 }, {
   accessorKey: 'product_name',
-  header: 'Name',
+  header: 'Nama Produk',
 }, {
   accessorKey: 'quantity',
   header: 'Qty',
@@ -66,7 +66,7 @@ const columns: TableColumn<Report>[] = [{
   header: 'Harga'
 }, {
   accessorKey: 'created_at',
-  header: 'Created At'
+  header: 'Tanggal'
 }, {
   accessorKey: 'subtotal',
   header: 'Sub Total',

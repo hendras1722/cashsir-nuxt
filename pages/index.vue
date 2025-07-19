@@ -1,24 +1,37 @@
 <template>
   <div class="min-h-screen p-5">
     <div class="flex justify-end mb-5 gap-3">
-      <UButton label="Manage Product" color="success" variant="solid" @click="$router.push('/product')" />
+      <UButton label="Mengelola Produk" color="success" variant="solid" @click="$router.push('/product')" />
       <UModal v-model:open="open" title="Tambah Order">
         <UButton label="Tambah Order" color="primary" variant="solid" />
         <template #body>
           <div class="w-full">
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-              <UFormField label="Product Name" name="product_name">
+              <UFormField label="Nama Produk" name="product_name">
                 <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" value-key="id"
                   label-key="product_name" />
               </UFormField>
 
-              <UFormField label="Quantity" name="quantity">
+              <UFormField label="Jumlah" name="quantity">
                 <div class="flex gap-3">
                   <UButton @click="() => {
                     if (!state.quantity) return
                     state.quantity += 1
-                  }">+</UButton>
-                  <UInput v-model="state.quantity" type="number" class="!w-[80px]">
+                    if (state.quantity && state.quantity > (getProduct.find((item) => item.id === state.product_name)?.stock || 0)) {
+                      state.quantity = getProduct.find((item) => item.id === state.product_name)?.stock || 1
+                    }
+
+                  }" :disabled="!(getProduct.find((item) => item.id ===
+                    state.product_name)?.stock)">+</UButton>
+                  <UInput v-model="state.quantity" type="number" class="!w-[80px]" @input="(e: any) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.value && Number(target.value) <= 1) {
+                      (target.value as any) = 1
+                    }
+                    if (target.value && Number(target.value) > (getProduct.find((item) => item.id === state.product_name)?.stock || 0)) {
+                      (target.value as any) = getProduct.find((item) => item.id === state.product_name)?.stock || 0
+                    }
+                  }">
                     <template #trailing>
                       <span v-if="state.product_name">/ {{getProduct.find((item) => item.id ===
                         state.product_name)?.stock}}x</span>
@@ -28,11 +41,7 @@
                     if (!state.quantity) return
                     state.quantity -= 1
                   }" :disabled="!!(state.quantity && state.quantity <= 1)">-</UButton>
-
-
                 </div>
-
-
               </UFormField>
 
               <div>
@@ -105,7 +114,7 @@
           <!-- Items List -->
           <div class="space-y-2 text-sm">
             <div class="grid grid-cols-4 gap-2 font-bold text-xs">
-              <div>Product Name</div>
+              <div>Nama Produk</div>
               <div class="text-center">Qty</div>
               <div class="text-right">Harga</div>
               <div class="text-right">Subtotal</div>
@@ -563,9 +572,14 @@ function handleCheckout() {
   })
   product.value = getProduct
   localStorage.setItem('data', JSON.stringify(getProduct))
-
-
 }
+
+watch(open, (newValue) => {
+  if (!newValue) {
+    state.product_name = ''
+    state.quantity = 1
+  }
+})
 
 
 onMounted(() => {

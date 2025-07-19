@@ -48,11 +48,11 @@ onMounted(() => {
 const columns: TableColumn<TableList>[] = [
   {
     accessorKey: 'id',
-    header: 'id',
+    header: 'ID',
   },
   {
     accessorKey: 'product_name',
-    header: 'Name',
+    header: 'Nama Produk',
 
   },
   {
@@ -127,12 +127,12 @@ function editItem(item: TableList) {
 
 <template>
   <div class="flex justify-end mb-5">
-    <UModal v-model:open="open" title="Add Product">
-      <UButton label="Add Product" color="primary" variant="solid" />
+    <UModal v-model:open="open" title="Tambah Produk">
+      <UButton label="Tambah Produk" color="primary" variant="solid" />
 
       <template #body>
         <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-          <UFormField label="Product Name" name="product_name">
+          <UFormField label="Nama Produk" name="product_name">
             <UInput v-model="state.product_name" class="w-full" />
           </UFormField>
 
@@ -142,7 +142,12 @@ function editItem(item: TableList) {
                 if (!state.stock) return
                 state.stock += 1
               }">+</UButton>
-              <UInput v-model="state.stock" type="number" class="!w-[60px]" />
+              <UInput v-model="state.stock" type="number" class="!w-[60px]" @input="(e: any) => {
+                const target = e.target as HTMLInputElement;
+                if (target.value && Number(target.value) <= 1) {
+                  (target.value as any) = 1
+                }
+              }" />
               <UButton @click="() => {
                 if (!state.stock) return
                 state.stock -= 1
