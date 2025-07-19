@@ -120,7 +120,7 @@ function editItem(item: TableList) {
   open.value = true
   state.product_name = item.product_name
   state.price = Number(item.price).toLocaleString('id-ID')
-  state.stock = item.stock
+  state.stock = item.stock === 0 ? 1 : item.stock
   id.value = item.id
 }
 </script>
