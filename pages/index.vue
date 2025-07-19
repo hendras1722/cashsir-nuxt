@@ -90,8 +90,18 @@
       </template>
     </u-table>
 
+
     <div class="flex justify-end mt-4 font-bold text-lg">
-      Total: Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}
+      <div class="flex flex-col gap-2">
+        <InputCurrency v-model="changeMoney">
+          <template #leading>
+            <span class="text-sm">Rp.</span>
+          </template>
+        </InputCurrency>
+        Total: Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}
+        <div>Kembali: {{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, '')) -
+          Number(getTotalList)).toLocaleString('id-ID') }}</div>
+      </div>
     </div>
 
     <UModal v-model:open="checkoutOpen" title="Checkout - Receipt" :dismissible="false" :close="false">
@@ -132,9 +142,23 @@
 
           <div class="border-t-2 border-dashed border-black mt-4 pt-2">
             <div class="flex justify-between font-bold">
-              <span>TOTAL:</span>
+              <span>DARI CUSTOMER:</span>
+              <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
+                }}</span>
+            </div>
+            <div class="flex justify-between font-bold">
+              <span>TOTAL HARGA:</span>
               <span>Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}</span>
             </div>
+            <!-- Divider -->
+            <div class="border-2 border-black w-full border-dashed my-4"></div>
+
+            <div class="flex justify-between font-bold">
+              <span>KEMBALI:</span>
+              <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, '')) - Number(getTotalList))
+                .toLocaleString('id-ID') }}</span>
+            </div>
+
           </div>
 
           <div class="flex justify-around gap-3 mt-6">
@@ -173,6 +197,7 @@ import { UButton, UModal, USelectMenu } from '#components'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
 import { addDays, startOfDay } from 'date-fns'
 import * as z from 'zod'
+import InputCurrency from '~/components/InputCurrency.vue'
 
 useHead({
   title: 'Cashsir App',
@@ -204,6 +229,7 @@ interface TableList {
   price: string
   subtotal: string
 }
+
 interface Product {
   id: string;
   product_name: string;
@@ -214,6 +240,7 @@ interface Product {
 
 const open = ref<boolean>(false)
 const checkoutOpen = ref<boolean>(false)
+const changeMoney = ref<string | null>(null)
 
 const state = reactive<Partial<Schema>>({
   product_name: '',
@@ -358,7 +385,10 @@ Tanggal: ${currentDate}
 
   receiptContent += `
 =================================
-TOTAL: Rp.${Number(getTotalList.value).toLocaleString('id-ID')}
+Dari Customer: Rp.${changeMoney.value && Number(Number(getTotalList.value)).toLocaleString('id-ID')}
+TOTAL Harga: Rp.${Number(getTotalList.value).toLocaleString('id-ID')}
+=================================
+KEMBALI: Rp.${changeMoney.value && Number(Number(changeMoney.value.replace(/[.]/g, '')) - Number(getTotalList.value)).toLocaleString('id-ID')}
 =================================
 
 Terima kasih atas pembelian Anda!
@@ -499,7 +529,13 @@ function printReceipt() {
     printContent += `
           </div>
           <div class="total">
+          <div>
+            Dari Customer: Rp.${changeMoney.value && Number(Number(getTotalList.value)).toLocaleString('id-ID')}
+          </div>
             TOTAL: Rp.${Number(getTotalList.value).toLocaleString('id-ID')}
+          </div>
+          <div class="total">
+            KEMBALI: Rp.${changeMoney.value && Number(Number(changeMoney.value.replace(/[.]/g, '')) - Number(getTotalList.value)).toLocaleString('id-ID')}
           </div>
           <div class="footer">
             <p>Terima kasih atas pembelian Anda!</p>
@@ -555,7 +591,8 @@ function handleCheckout() {
 
   const report = data.value.map((item: TableList) => ({
     ...item,
-    created_at: startOfDay(new Date(addDays(new Date(), 1).toISOString()))
+    created_at: startOfDay(new Date(addDays(new Date(), 1).toISOString())),
+    byCustomer: changeMoney.value ? Number(changeMoney.value.replace(/[.]/g, '')) : 0,
   }))
   const resultReport = [...report, ...JSON.parse(localStorage.getItem('report') || '[]')]
   localStorage.setItem('report', JSON.stringify(resultReport))
