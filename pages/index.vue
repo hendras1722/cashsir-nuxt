@@ -552,15 +552,12 @@ function printReceipt() {
     const printWindow = window.open('', '_blank', 'width=400,height=600')
     if (printWindow) {
       printWindow.document.write(printContent)
-      if (width.value > 768) {
-        printWindow.document.close()
-      }
+      printWindow.document.close()
+
       // Wait for content to load then print
       printWindow.onload = () => {
         printWindow.print()
-        if (width.value > 768) {
-          printWindow.close()
-        }
+        printWindow.close()
       }
 
       toast.add({
