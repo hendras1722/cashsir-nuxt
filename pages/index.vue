@@ -144,7 +144,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-                }}</span>
+              }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -549,12 +549,16 @@ function printReceipt() {
     const printWindow = window.open('', '_blank', 'width=400,height=600')
     if (printWindow) {
       printWindow.document.write(printContent)
-      printWindow.document.close()
+      setTimeout(() => {
+        printWindow.document.close()
+      }, 500)
 
       // Wait for content to load then print
       printWindow.onload = () => {
         printWindow.print()
-        printWindow.close()
+        setTimeout(() => {
+          printWindow.close()
+        }, 500) // Close after printing
       }
 
       toast.add({
