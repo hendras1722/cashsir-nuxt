@@ -144,7 +144,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-              }}</span>
+                }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -597,6 +597,7 @@ function handleCheckout() {
 
   const report = data.value.map((item: TableList) => ({
     ...item,
+    id: 'TRX-' + Date.now(),
     created_at: startOfDay(new Date(addDays(new Date(), 1).toISOString())),
     byCustomer: changeMoney.value ? Number(changeMoney.value.replace(/[.]/g, '')) : 0,
   }))
