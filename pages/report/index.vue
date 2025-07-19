@@ -18,7 +18,7 @@
     <template #created_at-cell="{ row }">
       <span>{{ row.original?.created_at && format(subDays(new Date(row.original.created_at), 1),
         'dd-MM-yyyy') || '-'
-      }}</span>
+        }}</span>
     </template>
     <template #price-cell="{ row }">
       <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
@@ -80,7 +80,7 @@ const getData = computed(() => {
 })
 
 const getTotalList = computed(() => {
-  return data.value.reduce((total, item) => total + Number(item.subtotal), 0)
+  return getData.value.reduce((total, item) => total + Number(item.subtotal), 0)
 })
 
 onMounted(() => {
