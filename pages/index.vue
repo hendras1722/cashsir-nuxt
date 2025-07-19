@@ -59,7 +59,7 @@
       </UModal>
     </div>
 
-    <u-table :data="data" :columns="columns">
+    <u-table id="table" :data="data" :columns="columns">
       <template #quantity-cell="{ row }">
         <UButton @click="handleCount('plus', row.original.id)"
           :disabled="row.original.quantity >= (product.length > 0 && product.find((item) => item.id === row.original.id)?.stock || 0)">
