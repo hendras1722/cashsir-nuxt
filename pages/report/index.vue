@@ -18,7 +18,7 @@
     <template #created_at-cell="{ row }">
       <span>{{ row.original?.created_at && format(subDays(new Date(row.original.created_at), 1),
         'dd-MM-yyyy') || '-'
-        }}</span>
+      }}</span>
     </template>
     <template #price-cell="{ row }">
       <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
@@ -139,7 +139,7 @@ const handleExport = () => {
   try {
 
     const csv = jsonToCsv(generateJsonFromData() as unknown as Report[])
-    const currentDate = format(new Date(), 'yyyy-MM-dd')
+    const currentDate = format(new Date(modelValue.value.toString()), 'yyyy-MM-dd')
     const fileName = `report-${currentDate}.csv`
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
