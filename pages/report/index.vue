@@ -1,15 +1,24 @@
 <template>
-  <div class="flex justify-end gap-3">
-    <UButton class="button" @click="handleExport">Export CSV</UButton>
-    <UPopover>
-      <UButton color="primary" variant="outline" icon="i-lucide-calendar">
-        {{ modelValue ? format(new Date(modelValue.toString()), 'dd MMMM yyyy') : 'Select a date' }}
-      </UButton>
-
-      <template #content>
-        <UCalendar v-model="modelValue" class="p-2" />
+  <div class="flex justify-between gap-3 items-center">
+    <UInput v-model="search">
+      <template #leading>
+        ID
       </template>
-    </UPopover>
+    </UInput>
+
+    <div class="flex items-center gap-3">
+      <UButton class="button" @click="handleExport">Export CSV</UButton>
+      <UPopover>
+        <UButton color="primary" variant="outline" icon="i-lucide-calendar">
+          {{ modelValue ? format(new Date(modelValue.toString()), 'dd MMMM yyyy') : 'Select a date' }}
+        </UButton>
+
+        <template #content>
+          <UCalendar v-model="modelValue" class="p-2" />
+        </template>
+      </UPopover>
+
+    </div>
   </div>
   <u-table id="table" :data="getData" :columns="columns">
     <template #quantity-cell="{ row }">
@@ -73,10 +82,11 @@ const columns: TableColumn<Report>[] = [{
 },]
 
 const data = ref<Report[]>([])
+const search = ref<string>('')
 
 const getData = computed(() => {
   if (data.value.length === 0) return []
-  return (data.value || [])?.filter(item => item.created_at.toString().split('T')[0] === modelValue.value.toString()) || []
+  return (data.value || [])?.filter(item => item.created_at.toString().split('T')[0] === modelValue.value.toString()).filter(item => item.id.toLocaleLowerCase().includes(search.value)) || []
 })
 
 const getTotalList = computed(() => {

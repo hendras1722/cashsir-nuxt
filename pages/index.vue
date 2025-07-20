@@ -144,7 +144,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-                }}</span>
+              }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
