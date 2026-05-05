@@ -5,11 +5,11 @@
       <UModal v-model:open="open" title="Tambah Order">
         <UButton label="Tambah Order" color="primary" variant="solid" />
         <template #body>
+          {{ state }}
           <div class="w-full">
-            <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+            <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit" @error="onError">
               <UFormField label="Nama Produk" name="product_name">
-                <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" value-key="id"
-                  label-key="product_name" />
+                <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" label-key="name" />
               </UFormField>
 
               <UFormField label="Jumlah" name="quantity">
@@ -17,24 +17,24 @@
                   <UButton @click="() => {
                     if (!state.quantity) return
                     state.quantity += 1
-                    if (state.quantity && state.quantity > (getProduct.find((item) => item.id === state.product_name)?.stock || 0)) {
-                      state.quantity = getProduct.find((item) => item.id === state.product_name)?.stock || 1
+                    if (state.quantity && state.quantity > (getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0)) {
+                      state.quantity = getProduct.find((item) => item.id === state.product_name?.id)?.stock || 1
                     }
 
                   }" :disabled="!(getProduct.find((item) => item.id ===
-                    state.product_name)?.stock)">+</UButton>
+                    state.product_name?.id)?.stock)">+</UButton>
                   <UInput v-model="state.quantity" type="number" class="!w-[80px]" @input="(e: any) => {
                     const target = e.target as HTMLInputElement;
                     if (target.value && Number(target.value) <= 1) {
                       (target.value as any) = 1
                     }
-                    if (target.value && Number(target.value) > (getProduct.find((item) => item.id === state.product_name)?.stock || 0)) {
-                      (target.value as any) = getProduct.find((item) => item.id === state.product_name)?.stock || 0
+                    if (target.value && Number(target.value) > (getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0)) {
+                      (target.value as any) = getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0
                     }
                   }">
                     <template #trailing>
-                      <span v-if="state.product_name">/ {{getProduct.find((item) => item.id ===
-                        state.product_name)?.stock}}x</span>
+                      <span v-if="state.product_name?.id">/ {{getProduct.find((item) => item.id ===
+                        state.product_name?.id)?.stock}}x</span>
                     </template>
                   </UInput>
                   <UButton @click="() => {
@@ -67,6 +67,8 @@
         </template>
       </UModal>
     </div>
+
+    {{ data }}
 
     <u-table id="table" :data="data" :columns="columns">
       <template #quantity-cell="{ row }">
@@ -132,7 +134,7 @@
 
             <template v-for="item in data" :key="item.id">
               <div class="grid grid-cols-4 gap-2 text-xs">
-                <div class="truncate">{{ item.product_name }}</div>
+                <div class="truncate">{{ item.name }}</div>
                 <div class="text-center">{{ item.quantity }}x</div>
                 <div class="text-right">Rp.{{ Number(item.price).toLocaleString('id-ID') }}</div>
                 <div class="text-right">Rp.{{ Number(item.subtotal).toLocaleString('id-ID') }}</div>
@@ -144,7 +146,7 @@
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
               <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-              }}</span>
+                }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -213,9 +215,14 @@ definePageMeta({
 const { width } = useWindowSize()
 
 const schema = z.object({
-  product_name: z.string().min(1),
+  product_name: z.object({
+    id: z.number(),
+    name: z.string(),
+    price: z.number(),
+    stock: z.number()
+  }),
   quantity: z.number().refine((value) => {
-    const getProductList = getProduct.value.find(item => item.id === state.product_name)
+    const getProductList = getProduct.value.find(item => item.id === state.product_name?.id)
     if (Number(value) > Number((getProductList)?.stock)) return false
     if (Number(value) <= 0) return false
     return true
@@ -226,18 +233,18 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 interface TableList {
-  id: string
-  product_name: string
+  id: number
+  name: string
   quantity: number
-  price: string
-  subtotal: string
+  price: number
+  subtotal: number
 }
 
 interface Product {
-  id: string;
-  product_name: string;
+  id: number;
+  name: string;
   stock: number;
-  price: string;
+  price: number;
 }
 
 
@@ -246,7 +253,12 @@ const checkoutOpen = ref<boolean>(false)
 const changeMoney = ref<string | null>(null)
 
 const state = reactive<Partial<Schema>>({
-  product_name: '',
+  product_name: {
+    id: 0,
+    name: '',
+    price: 0,
+    stock: 0
+  },
   quantity: 1
 })
 
@@ -259,7 +271,7 @@ const columns: TableColumn<TableList>[] = [
     header: 'ID',
   },
   {
-    accessorKey: 'product_name',
+    accessorKey: 'name',
     header: 'Name',
   },
   {
@@ -284,20 +296,20 @@ const product = ref<Product[]>([])
 
 const getProduct = computed(() => product.value.map((item: Product) => {
   return {
-    label: item.product_name,
-    value: item.id,
-    ...item
+    ...item,
+    label: item.name,
+    value: item.id
   }
-}).filter((item: Product) => item.stock > 0 && data.value.filter(product => product.id === item.id).length === 0) as Product[])
+}).filter((item: any) => item.stock > 0 && data.value.filter(product => product.id === item.id).length === 0) as Product[])
 
-function handleCount(type: 'min' | 'plus', id: string) {
+function handleCount(type: 'min' | 'plus', id: number) {
   if (type === 'plus') {
     data.value = data.value.map((item: TableList) => {
       if (item.id === id) {
         return {
           ...item,
           quantity: item.quantity + 1,
-          subtotal: String(Number(item.price) * (item.quantity + 1))
+          subtotal: item.price * (item.quantity + 1)
         }
       }
       return item
@@ -310,14 +322,14 @@ function handleCount(type: 'min' | 'plus', id: string) {
       return {
         ...item,
         quantity: newQuantity,
-        subtotal: String(Number(item.price) * newQuantity)
+        subtotal: item.price * newQuantity
       }
     }
     return item
   }) as TableList[]
 }
 
-function removeItem(id: string) {
+function removeItem(id: number) {
   data.value = data.value.filter(item => item.id !== id)
   toast.add({
     title: 'Success',
@@ -328,28 +340,49 @@ function removeItem(id: string) {
 
 const getTotalList = computed(() => {
   return data.value.reduce((total, item) => {
-    return total + Number(item.subtotal)
+    return total + item.subtotal
   }, 0)
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({ title: 'Success', description: 'The form has been submitted.', color: 'success' })
-  const findProduct = getProduct.value.find(item => item.id === event.data.product_name)
+  console.log('Submit Success', event.data)
+  toast.add({ title: 'Success', description: 'Item berhasil ditambahkan ke order', color: 'success' })
+
+  const productData = event.data.product_name
+  const quantity = event.data.quantity
+  const price = productData.price
+  const subtotal = price * quantity
+
   const items: TableList = {
-    id: findProduct?.id || '',
-    product_name: findProduct?.product_name || '',
-    quantity: event.data.quantity,
-    price: String(getTotal.value.price),
-    subtotal: String(getTotal.value.subtotal)
+    id: productData.id,
+    name: productData.name,
+    quantity: quantity,
+    price: price,
+    subtotal: subtotal
   }
+
+  console.log('Adding Item:', items)
+
   data.value = [...data.value, items]
   open.value = false
-  state.product_name = ''
+
+  // Reset form
+  state.product_name = {
+    id: 0,
+    name: '',
+    price: 0,
+    stock: 0
+  }
   state.quantity = 1
 }
 
+function onError(event: any) {
+  console.error('Validation Error:', event.errors)
+  toast.add({ title: 'Validation Error', description: 'Please check your input', color: 'error' })
+}
+
 const getTotal = computed(() => {
-  const getPrice = getProduct.value.find(item => item.id === state.product_name) as Product
+  const getPrice = getProduct.value.find(item => item.id === state.product_name?.id) as Product
   return {
     price: getPrice?.price,
     subtotal: getPrice && Number(getPrice?.price || 0) * (state.quantity || 0)
@@ -378,7 +411,7 @@ Tanggal: ${currentDate}
 `
 
   data.value.forEach(item => {
-    const itemName = item.product_name.padEnd(15)
+    const itemName = item.name.padEnd(15)
     const qty = `${item.quantity}x`.padStart(5)
     const price = `Rp.${Number(item.price).toLocaleString('id-ID')}`.padStart(12)
     const subtotal = `Rp.${Number(item.subtotal).toLocaleString('id-ID')}`.padStart(12)
@@ -521,7 +554,7 @@ function printReceipt() {
     data.value.forEach(item => {
       printContent += `
         <div class="item-row">
-          <div class="item-name">${item.product_name}</div>
+          <div class="item-name">${item.name}</div>
           <div class="item-qty">${item.quantity}x</div>
           <div class="item-price">Rp.${Number(item.price).toLocaleString('id-ID')}</div>
           <div class="item-subtotal">Rp.${Number(item.subtotal).toLocaleString('id-ID')}</div>
@@ -593,7 +626,7 @@ function clearCartAndClose() {
 
 function handleCheckout() {
   checkoutOpen.value = true
-  const getItemsLocalStorage = localStorage.getItem('data')
+  const getItemsLocalStorage = localStorage.getItem('pos_menus')
 
   const report = data.value.map((item: TableList) => ({
     ...item,
@@ -620,13 +653,31 @@ function handleCheckout() {
 
 watch(open, (newValue) => {
   if (!newValue) {
-    state.product_name = ''
+    state.product_name = {
+      id: 0,
+      name: '',
+      price: 0,
+      stock: 0
+    }
     state.quantity = 1
   }
 })
 
 
 onMounted(() => {
-  product.value = JSON.parse(localStorage.getItem('data') || '[]')
+  product.value = JSON.parse(localStorage.getItem('pos_menus') || '[]')
 })
 </script>
+
+<style lang="postcss">
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>

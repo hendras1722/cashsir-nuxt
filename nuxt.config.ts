@@ -3,6 +3,14 @@ export default defineNuxtConfig({
   app: {
     rootId: 'MSA',
     rootTag: 'MSA',
+    head: {
+      script: [
+        {
+          src: 'https://app.sandbox.midtrans.com/snap/snap.js',
+          'data-client-key': process.env.MIDTRANS_CLIENT_KEY
+        }
+      ]
+    }
   },
 
   icon: {
@@ -42,6 +50,14 @@ export default defineNuxtConfig({
 
   colorMode: {
     preference: 'light',
+  },
+
+  runtimeConfig: {
+    midtransServerKey: '',
+    public: {
+      midtransClientKey: '',
+      midtransIsProduction: false,
+    },
   },
 
   compatibilityDate: '2025-01-14',

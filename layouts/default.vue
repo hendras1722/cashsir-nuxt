@@ -121,19 +121,40 @@ const route = useRoute()
 
 const items = computed(() => [
   {
-    label: 'Product',
-    to: '/product',
-    icon: 'i-lucide-package-search',
-    active: route.path === '/product',
-    class: 'h-[50px]',
-    activeClass: '!text-blue-200 before:!bg-blue-500 rounded-lg'
-  }, {
-    label: 'Report',
+    label: 'Dashboard',
+    to: '/dashboard',
+    icon: 'i-heroicons-home',
+    active: route.path === '/dashboard',
+  },
+  {
+    label: 'POS (Cashier)',
+    to: '/cashier',
+    icon: 'i-heroicons-shopping-cart',
+    active: route.path === '/cashier',
+  },
+  {
+    label: 'Categories',
+    to: '/admin/categories',
+    icon: 'i-heroicons-tag',
+    active: route.path === '/admin/categories',
+  },
+  {
+    label: 'Menu Items',
+    to: '/admin/menus',
+    icon: 'i-heroicons-rectangle-group',
+    active: route.path === '/admin/menus',
+  },
+  {
+    label: 'Staff Management',
+    to: '/admin/staff',
+    icon: 'i-heroicons-user-group',
+    active: route.path === '/admin/staff',
+  },
+  {
+    label: 'Reports',
     to: '/report',
-    icon: 'i-lucide-clipboard-plus',
+    icon: 'i-heroicons-chart-bar',
     active: route.path === '/report',
-    class: 'h-[50px]',
-    activeClass: '!text-blue-200 before:!bg-blue-500 rounded-lg'
   }
 ])
 </script>

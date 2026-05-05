@@ -128,7 +128,7 @@ export default defineAppConfig({
     container: 'dark:bg-gray-900 sm:pr-0 pr-5 bg-gray-50',
     childContainer: 'flex flex-wrap justify-between items-center p-4',
   },
-  strategy: 'override',
+  strategy: 'merge',
   ui: {
     colors: {
       primary: 'sky',
