@@ -102,26 +102,15 @@ const remove = (id: number) => {
         <template #icon-cell="{ row }">
           <div class="flex items-center gap-2">
             <UIcon :name="row.original.icon" class="h-5 w-5" />
-            <span class="text-xs text-gray-500">{{ row.original.icon }}</span>
           </div>
         </template>
-        
+
         <template #actions-cell="{ row }">
           <div class="flex items-center gap-2">
-            <UButton
-              icon="i-heroicons-pencil-square"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              @click="openEdit(row.original)"
-            />
-            <UButton
-              icon="i-heroicons-trash"
-              size="xs"
-              color="error"
-              variant="ghost"
-              @click="remove(row.original.id)"
-            />
+            <UButton icon="i-heroicons-pencil-square" size="xs" color="neutral" variant="ghost"
+              @click="openEdit(row.original)" />
+            <UButton icon="i-heroicons-trash" size="xs" color="error" variant="ghost"
+              @click="remove(row.original.id)" />
           </div>
         </template>
       </UTable>
@@ -134,7 +123,8 @@ const remove = (id: number) => {
             <template #header>
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-bold">{{ isEditing ? 'Edit Category' : 'Add Category' }}</h3>
-                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+                  @click="isOpen = false" />
               </div>
             </template>
 
@@ -142,13 +132,9 @@ const remove = (id: number) => {
               <UFormField label="Category Name" name="name">
                 <UInput v-model="state.name" placeholder="e.g. Beverages" class="w-full" />
               </UFormField>
-              
+
               <UFormField label="Icon" name="icon">
-                <USelectMenu
-                  v-model="state.icon"
-                  :items="ionIcons"
-                  class="w-full"
-                >
+                <USelectMenu v-model="state.icon" :items="ionIcons" class="w-full">
                   <template #leading>
                     <UIcon v-if="state.icon" :name="state.icon.value" class="h-4 w-4" />
                   </template>
