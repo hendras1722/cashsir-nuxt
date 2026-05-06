@@ -1,84 +1,14 @@
 <template>
   <div class="min-h-screen p-5">
-    <div class="flex justify-end mb-5 gap-3">
-      <UButton label="Mengelola Produk" color="success" variant="solid" @click="$router.push('/product')" />
-      <UModal v-model:open="open" title="Tambah Order">
-        <UButton label="Tambah Order" color="primary" variant="solid" />
-        <template #body>
-          {{ state }}
-          <div class="w-full">
-            <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit" @error="onError">
-              <UFormField label="Nama Produk" name="product_name">
-                <USelectMenu v-model="state.product_name" class="w-full" :items="getProduct" label-key="name" />
-              </UFormField>
-
-              <UFormField label="Jumlah" name="quantity">
-                <div class="flex gap-3">
-                  <UButton @click="() => {
-                    if (!state.quantity) return
-                    state.quantity += 1
-                    if (state.quantity && state.quantity > (getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0)) {
-                      state.quantity = getProduct.find((item) => item.id === state.product_name?.id)?.stock || 1
-                    }
-
-                  }" :disabled="!(getProduct.find((item) => item.id ===
-                    state.product_name?.id)?.stock)">+</UButton>
-                  <UInput v-model="state.quantity" type="number" class="!w-[80px]" @input="(e: any) => {
-                    const target = e.target as HTMLInputElement;
-                    if (target.value && Number(target.value) <= 1) {
-                      (target.value as any) = 1
-                    }
-                    if (target.value && Number(target.value) > (getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0)) {
-                      (target.value as any) = getProduct.find((item) => item.id === state.product_name?.id)?.stock || 0
-                    }
-                  }">
-                    <template #trailing>
-                      <span v-if="state.product_name?.id">/ {{getProduct.find((item) => item.id ===
-                        state.product_name?.id)?.stock}}x</span>
-                    </template>
-                  </UInput>
-                  <UButton @click="() => {
-                    if (!state.quantity) return
-                    state.quantity -= 1
-                  }" :disabled="!!(state.quantity && state.quantity <= 1)">-</UButton>
-                </div>
-              </UFormField>
-
-              <div>
-                <div class="flex gap-14">
-                  <div>Harga</div>
-                  <div>Rp.{{ getTotal.price ? Number(getTotal.price).toLocaleString('id-ID') : 0 }}</div>
-                </div>
-                <div class="flex gap-4">
-                  <div>Total Harga</div>
-                  <div>Rp.{{ getTotal.subtotal ? Number(getTotal.subtotal).toLocaleString('id-ID') : 0 }}</div>
-                </div>
-              </div>
-              <div class="flex gap-3 justify-end">
-                <UButton type="reset" @click="open = false" color="neutral" variant="ghost">
-                  Cancel
-                </UButton>
-                <UButton type="submit">
-                  Submit
-                </UButton>
-              </div>
-            </UForm>
-          </div>
-        </template>
-      </UModal>
+    <div class="flex justify-center">
+      <h1 class="text-2xl font-bold">Cashier Apps</h1>
     </div>
+    <USeparator class="my-5" />
 
-    {{ data }}
 
     <u-table id="table" :data="data" :columns="columns">
       <template #quantity-cell="{ row }">
-        <UButton @click="handleCount('plus', row.original.id)"
-          :disabled="row.original.quantity >= (product.length > 0 && product.find((item) => item.id === row.original.id)?.stock || 0)">
-          +
-        </UButton>
         <span class="mx-2">{{ row.original.quantity }}</span>
-        <UButton @click="handleCount('min', row.original.id)" :variant="'solid'" :disabled="row.original.quantity <= 1">
-          -</UButton>
       </template>
       <template #price-cell="{ row }">
         <span>Rp.{{ Number(row.original.price).toLocaleString('id-ID') }}</span>
@@ -86,29 +16,146 @@
       <template #subtotal-cell="{ row }">
         <span>Rp.{{ Number(Number(row.original.price) * row.original.quantity).toLocaleString('id-ID') }}</span>
       </template>
-      <template #action-cell="{ row }">
+      <!-- <template #action-cell="{ row }">
         <UButton icon="i-lucide-trash" color="error" variant="ghost" aria-label="Delete"
           @click="removeItem(row.original.id)" />
-      </template>
+      </template> -->
     </u-table>
 
 
     <div class="flex justify-end mt-4 font-bold text-lg">
-      <div class="flex flex-col gap-2">
-        <InputCurrency v-model="changeMoney">
-          <template #leading>
-            <span class="text-sm">Rp.</span>
-          </template>
-        </InputCurrency>
-        Total: Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}
-        <div>Kembali: {{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, '')) -
-          Number(getTotalList)).toLocaleString('id-ID') }}</div>
+      <div class="flex flex-col gap-4 w-full max-w-xs">
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium">Amount Paid</span>
+            <span class="font-bold">Rp.{{ Number(posStore.amountPaid).toLocaleString('id-ID') }}</span>
+          </div>
+          <div
+            class="text-sm font-bold text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded flex justify-between">
+            <span>Change</span>
+            <span>Rp.{{ Math.max(0, posStore.amountPaid - Number(getTotalList)).toLocaleString('id-ID') }}</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center text-xl border-t pt-4">
+          <span>Total</span>
+          <span>Rp.{{ Number(getTotalList).toLocaleString('id-ID') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Midtrans Payment Info Modal (Mirrors Snap UI) -->
+    <div v-if="posStore.pendingPayment"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div
+        class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+        <!-- Header -->
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+          <span class="font-bold text-gray-800 dark:text-white uppercase tracking-wider">MSA</span>
+          <UButton icon="i-heroicons-x-mark" color="neutral" variant="ghost" @click="posStore.pendingPayment = null" />
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Amount & Order ID -->
+          <div class="text-center space-y-2">
+            <div class="flex items-center justify-center gap-2 text-2xl font-black text-gray-900 dark:text-white">
+              <span>{{ formatCurrency(posStore.pendingPayment.gross_amount || getTotalList) }}</span>
+              <UButton icon="i-heroicons-document-duplicate" size="xs" color="primary" variant="ghost"
+                @click="() => { navigator.clipboard.writeText(String(posStore.pendingPayment.gross_amount)); toast.add({ title: 'Amount Copied', color: 'success' }) }" />
+            </div>
+            <div class="flex items-center justify-center gap-2 text-xs text-gray-500">
+              <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded uppercase font-medium">Order ID #{{
+                posStore.pendingPayment.order_id }}</span>
+              <UButton icon="i-heroicons-document-duplicate" size="xs" color="neutral" variant="ghost"
+                @click="() => { navigator.clipboard.writeText(posStore.pendingPayment.order_id); toast.add({ title: 'Order ID Copied', color: 'success' }) }" />
+            </div>
+          </div>
+
+          <!-- Timer Simulation -->
+          <div class="bg-red-50 dark:bg-red-900/10 text-red-600 p-2 rounded text-center text-xs font-medium">
+            Pay within <span class="font-bold tabular-nums">23:59:59</span>
+          </div>
+
+          <!-- Bank Info -->
+          <div v-if="posStore.pendingPayment.va_numbers?.[0]" class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-lg font-bold">Bank {{ posStore.pendingPayment.va_numbers[0].bank.toUpperCase() }}</span>
+              <div
+                class="w-12 h-8 bg-gray-100 rounded flex items-center justify-center text-[10px] font-black text-gray-400">
+                {{ posStore.pendingPayment.va_numbers[0].bank.toUpperCase() }}
+              </div>
+            </div>
+
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Complete payment from {{ posStore.pendingPayment.va_numbers[0].bank.toUpperCase() }} to the virtual
+              account
+              number below.
+            </p>
+
+            <div class="space-y-1">
+              <div class="text-xs text-gray-400 font-medium">Virtual account number</div>
+              <div
+                class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                <span class="text-xl font-black tracking-widest text-primary-600">{{
+                  posStore.pendingPayment.va_numbers[0].va_number }}</span>
+                <UButton label="Copy" icon="i-heroicons-clipboard-document" color="primary" variant="soft" size="sm"
+                  @click="() => { navigator.clipboard.writeText(posStore.pendingPayment.va_numbers[0].va_number); toast.add({ title: 'VA Copied', color: 'success' }) }" />
+              </div>
+            </div>
+          </div>
+
+          <!-- QRIS Info -->
+          <div v-if="posStore.pendingPayment.payment_type === 'qris'" class="space-y-4 flex flex-col items-center">
+            <div class="text-lg font-bold">QRIS</div>
+            <div class="bg-white p-4 rounded-xl shadow-inner border">
+              <img :src="posStore.pendingPayment.actions?.find(a => a.name === 'generate-qr-code')?.url" alt="QRIS Code"
+                class="w-48 h-48" />
+            </div>
+            <p class="text-sm text-center text-gray-500">Scan QR code above with any payment app</p>
+          </div>
+
+          <!-- GOPAY/E-Wallets -->
+          <div
+            v-else-if="posStore.pendingPayment.payment_type === 'gopay' || posStore.pendingPayment.payment_type === 'shopeepay'"
+            class="space-y-4 flex flex-col items-center">
+            <div class="text-lg font-bold uppercase">{{ posStore.pendingPayment.payment_type }}</div>
+            <div class="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-xl text-center">
+              <p class="text-sm text-primary-600 font-medium">Please open your {{ posStore.pendingPayment.payment_type
+                }}
+                app to complete payment.</p>
+            </div>
+            <UButton v-if="posStore.pendingPayment.actions?.find(a => a.name === 'deeplink-redirect')" label="Open App"
+              :to="posStore.pendingPayment.actions?.find(a => a.name === 'deeplink-redirect')?.url" target="_blank"
+              block color="primary" />
+          </div>
+
+          <!-- Payment Code (Retail) -->
+          <div v-else-if="posStore.pendingPayment.payment_code" class="space-y-4">
+            <div class="text-lg font-bold uppercase">{{ posStore.pendingPayment.payment_type.replace('_', ' ') }}</div>
+            <div class="space-y-1">
+              <div class="text-xs text-gray-400 font-medium">Payment Code</div>
+              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border">
+                <span class="text-xl font-black tracking-widest text-primary-600">{{
+                  posStore.pendingPayment.payment_code
+                  }}</span>
+                <UButton label="Copy" icon="i-heroicons-clipboard-document" color="primary" variant="soft" size="sm"
+                  @click="() => { navigator.clipboard.writeText(posStore.pendingPayment.payment_code); toast.add({ title: 'Code Copied', color: 'success' }) }" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-6 pt-0 space-y-2">
+          <UButton label="Check payment status" block size="lg" color="primary" class="font-bold py-4"
+            :loading="checkingStatus" @click="checkPaymentStatus" />
+          <UButton label="Cancel / Close" block variant="ghost" color="neutral"
+            @click="posStore.pendingPayment = null" />
+        </div>
       </div>
     </div>
 
     <UModal v-model:open="checkoutOpen" title="Checkout - Receipt" :dismissible="false" :close="false">
-      <UButton label="Checkout" color="success" variant="solid" class="w-full flex justify-center mt-4"
-        :disabled="data.length === 0" @click="handleCheckout" />
       <template #body>
         <div class="w-full">
           <div class="text-center mb-4">
@@ -145,8 +192,7 @@
           <div class="border-t-2 border-dashed border-black mt-4 pt-2">
             <div class="flex justify-between font-bold">
               <span>DARI CUSTOMER:</span>
-              <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, ''))).toLocaleString('id-ID')
-                }}</span>
+              <span>Rp.{{ Number(posStore.amountPaid).toLocaleString('id-ID') }}</span>
             </div>
             <div class="flex justify-between font-bold">
               <span>TOTAL HARGA:</span>
@@ -157,8 +203,7 @@
 
             <div class="flex justify-between font-bold">
               <span>KEMBALI:</span>
-              <span>Rp.{{ changeMoney && Number(Number(changeMoney.replace(/[.]/g, '')) - Number(getTotalList))
-                .toLocaleString('id-ID') }}</span>
+              <span>Rp.{{ Math.max(0, posStore.amountPaid - Number(getTotalList)).toLocaleString('id-ID') }}</span>
             </div>
 
           </div>
@@ -189,6 +234,22 @@
             </UButton>
           </div>
         </div>
+      </template>
+    </UModal>
+
+    <!-- Thank You Modal -->
+    <UModal v-model:open="showThankYou" prevent-close :close="false">
+      <template #body>
+        <UCard>
+          <div class="p-8 text-center space-y-4">
+            <div
+              class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <UIcon name="i-heroicons-check-circle" class="w-12 h-12 text-green-600" />
+            </div>
+            <h2 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-wider">Terima Kasih!</h2>
+            <p class="text-gray-500 font-medium">Pembayaran Anda telah berhasil.</p>
+          </div>
+        </UCard>
       </template>
     </UModal>
   </div>
@@ -248,9 +309,25 @@ interface Product {
 }
 
 
+const posStore = usePosStore()
+
 const open = ref<boolean>(false)
 const checkoutOpen = ref<boolean>(false)
-const changeMoney = ref<string | null>(null)
+const showThankYou = ref<boolean>(false)
+const checkingStatus = ref(false)
+const statusInterval = ref<any>(null)
+
+const isCash = computed(() => true)
+
+
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(value)
+}
 
 const state = reactive<Partial<Schema>>({
   product_name: {
@@ -264,6 +341,16 @@ const state = reactive<Partial<Schema>>({
 
 const data = ref<TableList[]>([])
 const toast = useToast()
+
+watch(() => posStore.cart, (newCart) => {
+  data.value = newCart.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price,
+    subtotal: item.price * item.quantity
+  }))
+}, { deep: true, immediate: true })
 
 const columns: TableColumn<TableList>[] = [
   {
@@ -286,10 +373,6 @@ const columns: TableColumn<TableList>[] = [
     accessorKey: 'subtotal',
     header: 'Subtotal',
   },
-  {
-    accessorKey: 'action',
-    header: 'Action'
-  }
 ]
 
 const product = ref<Product[]>([])
@@ -303,34 +386,17 @@ const getProduct = computed(() => product.value.map((item: Product) => {
 }).filter((item: any) => item.stock > 0 && data.value.filter(product => product.id === item.id).length === 0) as Product[])
 
 function handleCount(type: 'min' | 'plus', id: number) {
+  const item = product.value.find(p => p.id === id)
+  if (!item) return
   if (type === 'plus') {
-    data.value = data.value.map((item: TableList) => {
-      if (item.id === id) {
-        return {
-          ...item,
-          quantity: item.quantity + 1,
-          subtotal: item.price * (item.quantity + 1)
-        }
-      }
-      return item
-    }) as TableList[]
-    return
+    posStore.addToCart(item as any)
+  } else {
+    posStore.removeFromCart(id)
   }
-  data.value = data.value.map((item: TableList) => {
-    if (item.id === id) {
-      const newQuantity = Math.max(0, item.quantity - 1)
-      return {
-        ...item,
-        quantity: newQuantity,
-        subtotal: item.price * newQuantity
-      }
-    }
-    return item
-  }) as TableList[]
 }
 
 function removeItem(id: number) {
-  data.value = data.value.filter(item => item.id !== id)
+  posStore.deleteFromCart(id)
   toast.add({
     title: 'Success',
     description: 'Item berhasil dihapus',
@@ -350,20 +416,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   const productData = event.data.product_name
   const quantity = event.data.quantity
-  const price = productData.price
-  const subtotal = price * quantity
 
-  const items: TableList = {
-    id: productData.id,
-    name: productData.name,
-    quantity: quantity,
-    price: price,
-    subtotal: subtotal
+  for (let i = 0; i < quantity; i++) {
+    posStore.addToCart({
+      id: productData.id,
+      categoryId: 0,
+      name: productData.name,
+      price: productData.price,
+      stock: productData.stock
+    })
   }
 
-  console.log('Adding Item:', items)
-
-  data.value = [...data.value, items]
   open.value = false
 
   // Reset form
@@ -421,10 +484,10 @@ Tanggal: ${currentDate}
 
   receiptContent += `
 =================================
-Dari Customer: Rp.${changeMoney.value && Number(Number(getTotalList.value)).toLocaleString('id-ID')}
+Dari Customer: Rp.${Number(posStore.amountPaid).toLocaleString('id-ID')}
 TOTAL Harga: Rp.${Number(getTotalList.value).toLocaleString('id-ID')}
 =================================
-KEMBALI: Rp.${changeMoney.value && Number(Number(changeMoney.value.replace(/[.]/g, '')) - Number(getTotalList.value)).toLocaleString('id-ID')}
+KEMBALI: Rp.${Math.max(0, posStore.amountPaid - Number(getTotalList.value)).toLocaleString('id-ID')}
 =================================
 
 Terima kasih atas pembelian Anda!
@@ -566,12 +629,12 @@ function printReceipt() {
           </div>
           <div class="total">
           <div>
-            Dari Customer: Rp.${changeMoney.value && Number(Number(getTotalList.value)).toLocaleString('id-ID')}
+            Dari Customer: Rp.${Number(posStore.amountPaid).toLocaleString('id-ID')}
           </div>
             TOTAL: Rp.${Number(getTotalList.value).toLocaleString('id-ID')}
           </div>
           <div class="total">
-            KEMBALI: Rp.${changeMoney.value && Number(Number(changeMoney.value.replace(/[.]/g, '')) - Number(getTotalList.value)).toLocaleString('id-ID')}
+            KEMBALI: Rp.${Math.max(0, posStore.amountPaid - Number(getTotalList.value)).toLocaleString('id-ID')}
           </div>
           <div class="footer">
             <p>Terima kasih atas pembelian Anda!</p>
@@ -624,7 +687,57 @@ function clearCartAndClose() {
   data.value = []
 }
 
-function handleCheckout() {
+async function handleCheckout() {
+  if (data.value.length === 0) return
+
+  const method = isCash.value ? 'cash' : 'transfer'
+
+  try {
+    if (method === 'transfer') {
+      const response = await $fetch<any>('/api/payment/midtrans', {
+        method: 'POST',
+        body: {
+          amount: getTotalList.value,
+          items: data.value
+        }
+      })
+
+      if (response.status === 'success') {
+        const paymentData = response.data
+        if (paymentData.va_numbers || paymentData.payment_code || ['qris', 'gopay', 'shopeepay'].includes(paymentData.payment_type)) {
+          posStore.pendingPayment = paymentData
+          $fetch('/api/events/publish', {
+            method: 'POST',
+            body: { type: 'PAYMENT_PENDING', data: paymentData }
+          }).catch(console.error)
+          return
+        }
+
+        if (paymentData.token && (window as any).snap) {
+          (window as any).snap.pay(paymentData.token, {
+            onSuccess: (result: any) => {
+              handlePaymentSuccess(result)
+            },
+            onPending: (result: any) => {
+              posStore.pendingPayment = result
+              $fetch('/api/events/publish', {
+                method: 'POST',
+                body: { type: 'PAYMENT_PENDING', data: result }
+              }).catch(console.error)
+            }
+          })
+        }
+      }
+    } else {
+      completeCheckout()
+    }
+  } catch (error) {
+    console.error('Checkout error:', error)
+    toast.add({ title: 'Error', description: 'Gagal memproses checkout', color: 'error' })
+  }
+}
+
+function completeCheckout() {
   checkoutOpen.value = true
   const getItemsLocalStorage = localStorage.getItem('pos_menus')
 
@@ -632,7 +745,7 @@ function handleCheckout() {
     ...item,
     id: 'TRX-' + Date.now(),
     created_at: startOfDay(new Date(addDays(new Date(), 1).toISOString())),
-    byCustomer: changeMoney.value ? Number(changeMoney.value.replace(/[.]/g, '')) : 0,
+    byCustomer: isCash.value ? posStore.amountPaid : getTotalList.value,
   }))
   const resultReport = [...report, ...JSON.parse(localStorage.getItem('report') || '[]')]
   localStorage.setItem('report', JSON.stringify(resultReport))
@@ -666,7 +779,119 @@ watch(open, (newValue) => {
 
 onMounted(() => {
   product.value = JSON.parse(localStorage.getItem('pos_menus') || '[]')
+
+  // Subscribe to SSE for real-time updates
+  const eventSource = new EventSource('/api/events/subscribe')
+
+  eventSource.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data)
+      if (payload.type === 'PAYMENT_PENDING') {
+        posStore.pendingPayment = payload.data
+        startStatusPolling()
+      } else if (payload.type === 'PAYMENT_SUCCESS') {
+        handlePaymentSuccess(payload.data, false) // Do NOT broadcast back
+      } else if (payload.type === 'ORDER_COMPLETED') {
+        showThankYou.value = true
+        setTimeout(() => {
+          showThankYou.value = false
+        }, 2000)
+      }
+    } catch (e) {
+      console.error('SSE Error:', e)
+    }
+  }
+
+  onUnmounted(() => {
+    eventSource.close()
+    if (statusInterval.value) clearInterval(statusInterval.value)
+  })
 })
+
+async function checkPaymentStatus() {
+  if (!posStore.pendingPayment) return
+  checkingStatus.value = true
+
+  try {
+    const response: any = await $fetch(`/api/payment/status?order_id=${posStore.pendingPayment.order_id}`)
+    if (response.status === 'success') {
+      const transactionStatus = response.data.transaction_status
+      if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
+        handlePaymentSuccess(response.data)
+      } else if (transactionStatus === 'pending') {
+        toast.add({ title: 'Payment Pending', description: 'Silakan selesaikan pembayaran Anda.', color: 'warning' })
+      } else {
+        toast.add({ title: 'Payment Status', description: `Status: ${transactionStatus}`, color: 'neutral' })
+      }
+    }
+  } catch (e) {
+    console.error('Check Status Error:', e)
+  } finally {
+    checkingStatus.value = false
+  }
+}
+
+function startStatusPolling() {
+  if (statusInterval.value) clearInterval(statusInterval.value)
+  statusInterval.value = setInterval(() => {
+    if (posStore.pendingPayment) {
+      checkPaymentStatus()
+    } else {
+      clearInterval(statusInterval.value)
+    }
+  }, 5000) // Poll every 5 seconds
+}
+
+async function handlePaymentSuccess(data: any, broadcast = true) {
+  if (statusInterval.value) clearInterval(statusInterval.value)
+  posStore.pendingPayment = null
+
+  toast.add({
+    title: 'Payment Successful',
+    description: 'Pembayaran telah diterima. Order akan segera diproses.',
+    color: 'success'
+  })
+
+  // Broadcast success to other clients only if detected locally
+  if (broadcast) {
+    $fetch('/api/events/publish', {
+      method: 'POST',
+      body: { type: 'PAYMENT_SUCCESS', data }
+    }).catch(() => { })
+
+    await finalizeOrder()
+  }
+}
+
+async function finalizeOrder() {
+  const savedReports = JSON.parse(localStorage.getItem('report') || '[]')
+
+  const newReport = {
+    id: `TRX-${Date.now()}`,
+    date: new Date().toISOString(),
+    items: data.value.map(item => ({ ...item })),
+    total: getTotalList.value,
+    method: 'transfer',
+    amountPaid: getTotalList.value,
+    change: 0
+  }
+
+  savedReports.push(newReport)
+  localStorage.setItem('report', JSON.stringify(savedReports))
+
+  // Update Stock
+  const menus = JSON.parse(localStorage.getItem('pos_menus') || '[]')
+  data.value.forEach(item => {
+    const menuIndex = menus.findIndex((m: any) => m.id === item.id)
+    if (menuIndex !== -1) {
+      menus[menuIndex].stock -= item.quantity
+    }
+  })
+  localStorage.setItem('pos_menus', JSON.stringify(menus))
+
+  checkoutOpen.value = true
+  // We keep data.value for the receipt modal, then clear it when modal closes or manually
+}
 </script>
 
 <style lang="postcss">

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 const posStore = usePosStore()
-const { cart, cartTotal } = storeToRefs(posStore)
+const { cart, cartTotal, amountPaid } = storeToRefs(posStore)
 
 const paymentMethod = ref('cash')
-const amountPaid = ref(0)
+const selectedBank = ref({ label: 'QRIS (Recommended)', value: 'qris', icon: 'i-heroicons-qr-code' })
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -29,15 +29,16 @@ const isCash = computed(() => {
 
 const handleCheckout = () => {
   const method = isCash.value ? 'cash' : 'transfer'
-  
+
   if (method === 'cash' && amountPaid.value < cartTotal.value) {
     return
   }
-  
+
   emit('checkout', {
     method: method,
     amountPaid: amountPaid.value,
-    change: change.value
+    change: change.value,
+    bank: !isCash.value ? (selectedBank.value?.value || selectedBank.value) : null
   })
 }
 </script>
@@ -54,32 +55,18 @@ const handleCheckout = () => {
         <p>Your cart is empty</p>
       </div>
 
-      <div
-        v-for="item in cart"
-        :key="item.id"
-        class="flex items-center justify-between group"
-      >
+      <div v-for="item in cart" :key="item.id" class="flex items-center justify-between group">
         <div class="flex-1">
           <h4 class="font-medium text-sm">{{ item.name }}</h4>
           <p class="text-xs text-gray-500">{{ formatCurrency(item.price) }} x {{ item.quantity }}</p>
         </div>
-        
+
         <div class="flex items-center gap-2">
-          <UButton
-            icon="i-heroicons-minus"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            @click="posStore.removeFromCart(item.id)"
-          />
+          <UButton icon="i-heroicons-minus" size="xs" color="neutral" variant="ghost"
+            @click="posStore.removeFromCart(item.id)" />
           <span class="text-sm font-bold w-4 text-center">{{ item.quantity }}</span>
-          <UButton
-            icon="i-heroicons-plus"
-            size="xs"
-            color="neutral"
-            variant="ghost"
-            @click="posStore.addToCart(item)"
-          />
+          <UButton icon="i-heroicons-plus" size="xs" color="neutral" variant="ghost"
+            @click="posStore.addToCart(item)" />
         </div>
       </div>
     </div>
@@ -89,31 +76,30 @@ const handleCheckout = () => {
         <div class="flex justify-between items-center text-sm font-medium text-gray-500">
           <span>Payment Method</span>
         </div>
-        <UTabs
-          v-model="paymentMethod"
-          :items="[
-            { label: 'Cash', value: 'cash', icon: 'i-heroicons-banknotes' },
-            { label: 'Transfer', value: 'transfer', icon: 'i-heroicons-credit-card' }
-          ]"
-          class="w-full"
-        />
+        <UTabs v-model="paymentMethod" :items="[
+          { label: 'Cash', value: 'cash', icon: 'i-heroicons-banknotes' },
+          { label: 'Transfer', value: 'transfer', icon: 'i-heroicons-credit-card' }
+        ]" class="w-full" />
+
+        <div v-if="!isCash" class="space-y-2 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="text-xs font-bold text-gray-500 uppercase">Select Payment Method</div>
+          <USelectMenu v-model="selectedBank" :items="[
+            { label: 'QRIS (Recommended)', value: 'qris' },
+            { label: 'BCA Virtual Account', value: 'bca' },
+            { label: 'Mandiri Bill', value: 'echannel' },
+            { label: 'BNI Virtual Account', value: 'bni' },
+            { label: 'BRI Virtual Account', value: 'bri' }
+          ]" class="w-full" placeholder="Choose Payment" size="lg" />
+        </div>
 
         <div v-if="isCash" class="space-y-2 pt-2">
           <div class="flex justify-between items-center text-sm">
             <span>Amount Paid</span>
           </div>
-          <UInput
-            v-model="amountPaid"
-            type="number"
-            icon="i-heroicons-banknotes"
-            placeholder="0"
-            size="lg"
-            class="w-full font-bold"
-          />
-          <div 
-            class="flex justify-between items-center text-sm font-bold p-2 rounded transition-colors"
-            :class="change >= 0 ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-red-600 bg-red-50 dark:bg-red-900/20'"
-          >
+          <UInput v-model="amountPaid" type="number" icon="i-heroicons-banknotes" placeholder="0" size="lg"
+            class="w-full font-bold" />
+          <div class="flex justify-between items-center text-sm font-bold p-2 rounded transition-colors"
+            :class="change >= 0 ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-red-600 bg-red-50 dark:bg-red-900/20'">
             <span>{{ change >= 0 ? 'Change' : 'Remaining' }}</span>
             <span>{{ formatCurrency(Math.abs(change)) }}</span>
           </div>
@@ -126,25 +112,14 @@ const handleCheckout = () => {
         <span>Total</span>
         <span class="text-primary-600">{{ formatCurrency(cartTotal) }}</span>
       </div>
-      
-      <UButton
-        block
-        size="lg"
-        color="primary"
-        :disabled="cart.length === 0 || (paymentMethod === 'cash' && amountPaid < cartTotal)"
-        @click="handleCheckout"
-      >
+
+      <UButton block size="lg" color="primary"
+        :disabled="cart.length === 0 || (paymentMethod === 'cash' && amountPaid < cartTotal)" @click="handleCheckout">
         Confirm & Pay
       </UButton>
-      
-      <UButton
-        block
-        size="sm"
-        color="neutral"
-        variant="ghost"
-        :disabled="cart.length === 0"
-        @click="posStore.clearCart"
-      >
+
+      <UButton block size="sm" color="neutral" variant="ghost" :disabled="cart.length === 0"
+        @click="posStore.clearCart">
         Clear Order
       </UButton>
     </div>

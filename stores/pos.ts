@@ -31,6 +31,8 @@ export const usePosStore = defineStore('pos', () => {
   ])
 
   const cart = ref<CartItem[]>([])
+  const pendingPayment = ref<any>(null)
+  const amountPaid = ref<number>(0)
 
   // Load from localStorage on init
   onMounted(() => {
@@ -39,12 +41,32 @@ export const usePosStore = defineStore('pos', () => {
 
     const savedMenus = localStorage.getItem('pos_menus')
     if (savedMenus) menus.value = JSON.parse(savedMenus)
+
+    const savedPending = localStorage.getItem('pos_pending_payment')
+    if (savedPending) pendingPayment.value = JSON.parse(savedPending)
+
+    const savedCart = localStorage.getItem('pos_cart')
+    if (savedCart) cart.value = JSON.parse(savedCart)
+
+    const savedAmountPaid = localStorage.getItem('pos_amount_paid')
+    if (savedAmountPaid) amountPaid.value = JSON.parse(savedAmountPaid)
+
+    // Sync across tabs
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'pos_cart' && e.newValue) cart.value = JSON.parse(e.newValue)
+      if (e.key === 'pos_menus' && e.newValue) menus.value = JSON.parse(e.newValue)
+      if (e.key === 'pos_pending_payment' && e.newValue) pendingPayment.value = JSON.parse(e.newValue)
+      if (e.key === 'pos_amount_paid' && e.newValue) amountPaid.value = JSON.parse(e.newValue)
+    })
   })
 
   // Watch for changes and save to localStorage
-  watch([categories, menus], () => {
+  watch([categories, menus, pendingPayment, cart, amountPaid], () => {
     localStorage.setItem('pos_categories', JSON.stringify(categories.value))
     localStorage.setItem('pos_menus', JSON.stringify(menus.value))
+    localStorage.setItem('pos_pending_payment', JSON.stringify(pendingPayment.value))
+    localStorage.setItem('pos_cart', JSON.stringify(cart.value))
+    localStorage.setItem('pos_amount_paid', JSON.stringify(amountPaid.value))
   }, { deep: true })
 
   const addToCart = (product: Menu) => {
@@ -67,8 +89,16 @@ export const usePosStore = defineStore('pos', () => {
     }
   }
 
+  const deleteFromCart = (productId: number) => {
+    const index = cart.value.findIndex((i) => i.id === productId)
+    if (index !== -1) {
+      cart.value.splice(index, 1)
+    }
+  }
+
   const clearCart = () => {
     cart.value = []
+    amountPaid.value = 0
   }
 
   const cartTotal = computed(() => {
@@ -81,7 +111,10 @@ export const usePosStore = defineStore('pos', () => {
     cart,
     addToCart,
     removeFromCart,
+    deleteFromCart,
     clearCart,
     cartTotal,
+    pendingPayment,
+    amountPaid
   }
 })
